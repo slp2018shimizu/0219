@@ -1,0 +1,140 @@
+〜パイソンインストール〜
+1：$ xcode-select --install
+xcode-select: note: install requested for command line developer tools
+
+2：$ ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+
+3：$ brew update
+
+4：$ brew install pyenv
+
+5：$ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
+　　$ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+　　$ echo 'eval "$(pyenv init -)"' >> ~/.bash_profile
+
+6：$ source .bash_profile
+
+7：$ pyenv install --list
+
+8：$ pyenv install 3.5.1（最新のものをリストから選ぶ）
+
+9：$ pyenv global 3.5.1
+　　$ pyenv rehash
+
+10：$ pyenv versions
+  system
+* 3.5.1 (set by /Users/[user_name]/.pyenv/version)
+
+11：$ python --version
+Python 3.5.1
+
+〜Django・SQL導入〜
+
+12：（デスクトップなどのディレクトリ内で）
+$ python -m venv myvenv
+
+13：$ cd myenv
+
+14：$ pip3 install django==1.8
+
+15：（プロジェクト作成）$ django-admin startproject myapp .
+
+16：（settings.pyを以下のように編集）LANGUAGE_CODE = 'ja'
+TIME_ZONE = 'Asia/Tokyo'
+USE_TZ = False  # DefaultではUTCのタイムゾーンのため False に変更
+
+17：（データベース設定）$ python manage.py migrate
+
+18：（サーバー起動）$ python manage.py runserver
+http〜にブラウザでアクセスしてみる
+
+~アプリ制作〜
+19：python manage.py startapp keishinapp(アプリ名)
+
+20:settings.pyのなかに以下のように追記
+INSTALLED_APPS = (
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'ec'
+)
+
+21：ec/models.pyを開き以下のように変更
+from django.db import models
+from django.utils import timezone
+
+class Post(models.Model):
+    author = models.ForeignKey('auth.User')
+    title  = models.CharField(max_length=200)
+    text   = models.TextField()
+    created_date = models.DateTimeField(default=timezone.now)
+    published_date = models.DateTimeField(blank=True, null=True)
+
+    def publish(self):
+        self.published_date = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return self.title
+        
+
+22:python manage.py makemigrations ec
+
+23:python manage.py migrate ec
+
+24:(ec/admin.pyを以下のように変更)
+from django.contrib import admin
+from .models import Post
+
+# Register your models here.
+admin.site.register(Post)
+
+25:(ユーザー名、パスを決定)python manage.py syncdb
+
+26:（Postsから投稿を可能にする）http://127.0.0.1:8000/admin/にアクセスしログイン
+
+27:（urls.pyのurlpatternsに以下を追記）
+url(r'', include('ec.urls')),
+
+28:（ec/urls.pyを作成し、以下を記入）
+from django.conf.urls import url
+from . import views
+
+urlpatterns = [
+    url(r'^$', views.post_list),
+]
+
+29:(ec/views.pyを以下のように変更)
+from django.shortcuts import render
+
+# Create your views here.
+def post_list(request):
+    return render(request, 'ec/post_list.html', {})
+    
+30:$ mkdir ec/templates
+$ mkdir ec/templates/ec
+
+31:（ec/templates/ecにpost_list.html を作成し以下を記入）
+<html>
+    <p>Hi there!</p>
+    <p>It works!</p>
+</html>
+（http://127.0.0.1:8000/ にて確認）
+    
+〜データ管理〜
+32：$ python3 manage.py shell
+33：（データの表示）
+>>> from ec.models import Post
+>>> Post.objects.all()
+
+Post.objects.create(author=misako, title="misako's article", text="これはQiita用の記事です")
+<Post: misako's article>
+
+
+
+
+
+
